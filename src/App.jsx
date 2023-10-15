@@ -1,38 +1,56 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import './style.css';
+import { NewTodoForm } from './NewTodoForm';
+import { TodoList } from './TodoList';
 
-// eslint-disable-next-line react/prop-types
-export function NewTodoForm({ onSubmitt } /**or props.submit */) {
-  const [newItem, setNewItem] = useState('');
+export default function App() {
+  // const [newItem, setNewItem] = useState('');
+  const [todos, setTodos] = useState(() => {
+    const localValue = localStorage.getItem('ITEMS');
+    if (localValue == null) return [];
+    return JSON.parse(localValue);
+  });
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  useEffect(() => {
+    localStorage.setItem('ITEMS', JSON.stringify(todos));
+  }, [todos]);
 
-    // setTodos((currentTodos) => {
-    //   return [
-    //     ...currentTodos,
-    //     {
-    //       id: crypto.randomUUID(),
-    //       title: newItem,
-    //       completed: false,
-    //     },
-    //   ];
-    // });
-    onSubmitt(newItem);
-
-    setNewItem(''); //clears the search input area
+  function addTodo(title) {
+    setTodos((currentTodos) => {
+      return [
+        ...currentTodos,
+        { id: crypto.randomUUID(), title, completed: false },
+      ];
+    });
   }
+
+  //MAKE CHECKBOX TOGGLABLE
+  function toggleTodo(id, completed) {
+    setTodos((currentTodos) => {
+      return currentTodos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, completed };
+        }
+      });
+    });
+  }
+
+  //DELETE TODO
+  function deleteTodo(id) {
+    setTodos((currentTodos) => {
+      //returns todos array except the clicked one
+      //if todos id is not equal to clicked one keep it otherwise remove it
+      return currentTodos.filter((todo) => todo.id !== id);
+    });
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="new-item-form">
-      <div className="form-row">
-        <label htmlFor="item">New Item</label>
-        <input
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-          type="text"
-          id="item"
-        />
-      </div>
-      <button className="btn">Add</button>
-    </form>
+    <>
+      <NewTodoForm onSubmitt={addTodo} />
+      <h1 className="header">Todo List</h1>
+      <TodoList todos={todos} toggleTodo={toggleTodo} deleteTodo={deleteTodo} />
+    </>
   );
 }
+
+//fragment - an element that has no tag at all <></>
